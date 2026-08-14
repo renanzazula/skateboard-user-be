@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+railway:
+  bucket:
+    access-key-id: ${AWS_ACCESS_KEY_ID}
+    secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    endpoint: ${AWS_ENDPOINT_URL}
+    region: ${AWS_DEFAULT_REGION:auto}
+
+app:
+  cors:
+    allowed-origins:
+      - https://skateboard-user-fe-app.up.railway.app*
+      - http://localhost:8081
+  security:
+    oauth2:
+      admin:
+        server-url: ${KEYCLOAK_ADMIN_SERVER_URL}
+        realm: ${KEYCLOAK_ADMIN_REALM}
+        client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:skateboard-user-be}
+        client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

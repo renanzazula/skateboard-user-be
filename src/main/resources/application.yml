@@ -1,0 +1,71 @@
+server:
+  # 8080 is skateboard-podcast-be, 8081 is Expo/Metro, 8090 is
+  # skateboard-ui-backend, 8180 is Keycloak — pick a free port.
+  port: 8082
+
+spring:
+  application:
+    name: user
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/skateboard}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    # Flyway owns the schema (db/migration); Hibernate only validates its matches.
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: skateboard-user
+
+  flyway:
+    enabled: true
+    schemas: skateboard-user
+    create-schemas: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Keycloak realm issuer — JWKS is discovered from
+          # {issuer-uri}/.well-known/openid-configuration at startup, so
+          # Keycloak must be reachable when this app boots. "skateboard-podcast"
+          # is the one shared platform realm (../skateboard-infrastructure/.docker/keycloak/realm-export.json)
+          # despite its name — every backend service, not just podcast, runs
+          # against it.
+          issuer-uri: ${APP_SECURITY_OAUTH2_ISSUER_URI:http://localhost:8180/realms/skateboard-podcast}
+
+app:
+  security:
+    oauth2:
+      # Tokens must include this in their "aud" claim.
+      audience: ${APP_SECURITY_OAUTH2_AUDIENCE:skateboard-user-be}
+      admin:
+        # Client-credentials grant used only by adapter/out/keycloak for
+        # username changes, disabling/deleting identities, and password
+        # resets. This must be a confidential client with the Keycloak
+        # "manage-users" realm-management role, never the same public client
+        # used for end-user login. Client id matches the audience value, same
+        # convention as skateboard-podcast-be's own confidential client.
+        server-url: ${KEYCLOAK_ADMIN_SERVER_URL:http://localhost:8180}
+        realm: ${KEYCLOAK_ADMIN_REALM:skateboard-podcast}
+        client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:skateboard-user-be}
+        client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:dev-user-be-secret}
+
+railway:
+  bucket:
+    # Profile picture object storage — S3-compatible. Local defaults assume a
+    # local MinIO on the standard port; override via env for real use.
+    access-key-id: ${AWS_ACCESS_KEY_ID:minioadmin}
+    secret-access-key: ${AWS_SECRET_ACCESS_KEY:minioadmin}
+    bucket-name: ${AWS_S3_BUCKET_NAME:skateboard-user}
+    endpoint: ${AWS_ENDPOINT_URL:http://localhost:9000}
+    region: ${AWS_DEFAULT_REGION:auto}
