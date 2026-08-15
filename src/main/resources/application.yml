@@ -69,3 +69,7 @@ railway:
     bucket-name: ${AWS_S3_BUCKET_NAME:skateboard-user}
     endpoint: ${AWS_ENDPOINT_URL:http://localhost:9000}
     region: ${AWS_DEFAULT_REGION:auto}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId}] [%thread] %logger{36} - %msg%n"
