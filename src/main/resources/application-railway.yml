@@ -19,11 +19,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: skateboard-user
+        default_schema: skateboard_user
 
   flyway:
     enabled: true
-    schemas: skateboard-user
+    schemas: skateboard_user
     create-schemas: true
 
   servlet:
