@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.InputStream;
@@ -35,6 +36,9 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
                         .key(objectKey)
                         .contentType(contentType)
                         .contentLength(contentLength)
+                        // upload() hands back a direct, unsigned URL — the object must be
+                        // publicly readable at upload time, or every profile picture 404s.
+                        .acl(ObjectCannedACL.PUBLIC_READ)
                         .build(),
                 RequestBody.fromInputStream(content, contentLength));
         String url = "%s/%s/%s".formatted(publicBaseUrl, bucketName, objectKey);
