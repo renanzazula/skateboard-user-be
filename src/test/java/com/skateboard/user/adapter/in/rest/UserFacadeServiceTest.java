@@ -2,6 +2,7 @@ package com.skateboard.user.adapter.in.rest;
 
 import com.skateboard.application.dto.*;
 import com.skateboard.user.application.port.in.*;
+import com.skateboard.user.application.port.out.ProfileImageStoragePort;
 import com.skateboard.user.domain.model.NotificationPreferences;
 import com.skateboard.user.domain.model.ProblemReport;
 import com.skateboard.user.domain.model.ProblemReportCategory;
@@ -31,6 +32,7 @@ class UserFacadeServiceTest {
     @Mock private DeactivateCurrentUserUseCase deactivateCurrentUserUseCase;
     @Mock private DeleteCurrentUserUseCase deleteCurrentUserUseCase;
     @Mock private ReportProblemUseCase reportProblemUseCase;
+    @Mock private ProfileImageStoragePort profileImageStoragePort;
 
     private UserFacadeService facade;
 
@@ -40,7 +42,8 @@ class UserFacadeServiceTest {
         facade = new UserFacadeService(getCurrentUserUseCase, updateCurrentUserUseCase,
                 getNotificationPreferencesUseCase, updateNotificationPreferencesUseCase,
                 uploadProfilePictureUseCase, changeUsernameUseCase, changePasswordUseCase,
-                deactivateCurrentUserUseCase, deleteCurrentUserUseCase, reportProblemUseCase);
+                deactivateCurrentUserUseCase, deleteCurrentUserUseCase, reportProblemUseCase,
+                profileImageStoragePort);
     }
 
     @Test

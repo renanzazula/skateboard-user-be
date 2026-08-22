@@ -2,6 +2,7 @@ package com.skateboard.user.adapter.in.rest;
 
 import com.skateboard.application.dto.*;
 import com.skateboard.user.application.port.in.*;
+import com.skateboard.user.application.port.out.ProfileImageStoragePort;
 import com.skateboard.user.domain.model.ProblemReport;
 import com.skateboard.user.domain.model.UserProfile;
 
@@ -34,6 +35,7 @@ public class UserFacadeService {
     private final DeactivateCurrentUserUseCase deactivateCurrentUserUseCase;
     private final DeleteCurrentUserUseCase deleteCurrentUserUseCase;
     private final ReportProblemUseCase reportProblemUseCase;
+    private final ProfileImageStoragePort profileImageStoragePort;
 
     public UserFacadeService(GetCurrentUserUseCase getCurrentUserUseCase,
                               UpdateCurrentUserUseCase updateCurrentUserUseCase,
@@ -44,7 +46,8 @@ public class UserFacadeService {
                               ChangePasswordUseCase changePasswordUseCase,
                               DeactivateCurrentUserUseCase deactivateCurrentUserUseCase,
                               DeleteCurrentUserUseCase deleteCurrentUserUseCase,
-                              ReportProblemUseCase reportProblemUseCase) {
+                              ReportProblemUseCase reportProblemUseCase,
+                              ProfileImageStoragePort profileImageStoragePort) {
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.updateCurrentUserUseCase = updateCurrentUserUseCase;
         this.getNotificationPreferencesUseCase = getNotificationPreferencesUseCase;
@@ -55,6 +58,7 @@ public class UserFacadeService {
         this.deactivateCurrentUserUseCase = deactivateCurrentUserUseCase;
         this.deleteCurrentUserUseCase = deleteCurrentUserUseCase;
         this.reportProblemUseCase = reportProblemUseCase;
+        this.profileImageStoragePort = profileImageStoragePort;
     }
 
     public UserResponse getCurrentUser(UUID keycloakUserId, String usernameHint) {
@@ -126,7 +130,11 @@ public class UserFacadeService {
                 .id(profile.getId())
                 .username(profile.getUsername())
                 .displayName(profile.getDisplayName())
-                .profilePictureUrl(profile.getProfilePictureUrl())
+                // Never the stored profile.getProfilePictureUrl() — the object is
+                // private (see S3ProfileImageStorageAdapter), so a URL is only ever
+                // valid freshly presigned from the object key, on every read, not
+                // just right after upload.
+                .profilePictureUrl(profileImageStoragePort.presignGetUrl(profile.getProfilePictureObjectKey()))
                 .status(AccountStatus.fromValue(profile.getStatus().name()))
                 .createdAt(profile.getCreatedAt().atOffset(ZoneOffset.UTC))
                 .updatedAt(profile.getUpdatedAt().atOffset(ZoneOffset.UTC));

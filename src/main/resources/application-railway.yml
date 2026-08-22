@@ -69,6 +69,11 @@ railway:
     bucket-name: ${AWS_S3_BUCKET_NAME:skateboard-user}
     endpoint: ${AWS_ENDPOINT_URL:http://localhost:9000}
     region: ${AWS_DEFAULT_REGION:auto}
+    # Objects are private (Railway's Tigris-backed bucket doesn't honor
+    # per-object canned ACLs the way AWS S3 does — see
+    # S3ProfileImageStorageAdapter); profilePictureUrl is always a fresh
+    # presigned GET URL generated at read time, never a stored/public one.
+    presigned-url-expiration-minutes: 60
 
 logging:
   pattern:

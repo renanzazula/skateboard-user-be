@@ -6,25 +6,31 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.UUID;
 
 @Component
 public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
     private final String bucketName;
-    private final String publicBaseUrl;
+    private final long presignedUrlExpirationMinutes;
 
     public S3ProfileImageStorageAdapter(S3Client s3Client,
+                                         S3Presigner s3Presigner,
                                          @Value("${railway.bucket.bucket-name}") String bucketName,
-                                         @Value("${railway.bucket.endpoint}") String publicBaseUrl) {
+                                         @Value("${railway.bucket.presigned-url-expiration-minutes}") long presignedUrlExpirationMinutes) {
         this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
         this.bucketName = bucketName;
-        this.publicBaseUrl = publicBaseUrl;
+        this.presignedUrlExpirationMinutes = presignedUrlExpirationMinutes;
     }
 
     @Override
@@ -36,13 +42,25 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
                         .key(objectKey)
                         .contentType(contentType)
                         .contentLength(contentLength)
-                        // upload() hands back a direct, unsigned URL — the object must be
-                        // publicly readable at upload time, or every profile picture 404s.
-                        .acl(ObjectCannedACL.PUBLIC_READ)
                         .build(),
                 RequestBody.fromInputStream(content, contentLength));
-        String url = "%s/%s/%s".formatted(publicBaseUrl, bucketName, objectKey);
-        return new StoredImage(objectKey, url);
+        // Objects are private — Railway's Tigris-backed bucket doesn't honor
+        // per-object canned ACLs the way AWS S3 does, so a direct/unsigned URL
+        // here would 403 (confirmed: every profile picture did). The URL
+        // callers actually see always comes from presignGetUrl() at read time.
+        return new StoredImage(objectKey, presignGetUrl(objectKey));
+    }
+
+    @Override
+    public String presignGetUrl(String objectKey) {
+        if (objectKey == null || objectKey.isBlank()) {
+            return null;
+        }
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(presignedUrlExpirationMinutes))
+                .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(objectKey).build())
+                .build();
+        return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
     @Override
