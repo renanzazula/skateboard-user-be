@@ -59,6 +59,8 @@ app:
         realm: ${KEYCLOAK_ADMIN_REALM:skateboard-podcast}
         client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:skateboard-user-be}
         client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:dev-user-be-secret}
+  tenancy:
+    default-tenant-id: ${APP_TENANCY_DEFAULT_TENANT_ID:00000000-0000-0000-0000-000000000001}
 
 railway:
   bucket:

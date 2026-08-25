@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -24,13 +27,18 @@ public class KeycloakIdentityAdapter implements IdentityProviderPort {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakIdentityAdapter.class);
 
+    private static final String TENANT_ID_ATTRIBUTE = "tenant_id";
+
     private final Keycloak keycloakAdminClient;
     private final String realm;
+    private final String defaultTenantId;
 
     public KeycloakIdentityAdapter(Keycloak keycloakAdminClient,
-                                    @Value("${app.security.oauth2.admin.realm}") String realm) {
+                                    @Value("${app.security.oauth2.admin.realm}") String realm,
+                                    @Value("${app.tenancy.default-tenant-id}") String defaultTenantId) {
         this.keycloakAdminClient = keycloakAdminClient;
         this.realm = realm;
+        this.defaultTenantId = defaultTenantId;
     }
 
     @Override
@@ -70,6 +78,23 @@ public class KeycloakIdentityAdapter implements IdentityProviderPort {
         credential.setValue(newPassword);
         credential.setTemporary(false);
         userResource(keycloakUserId).resetPassword(credential);
+    }
+
+    @Override
+    public void ensureTenantAssigned(UUID keycloakUserId) {
+        UserResource resource = userResource(keycloakUserId);
+        UserRepresentation representation = resource.toRepresentation();
+        Map<String, List<String>> attributes = representation.getAttributes();
+        List<String> existing = attributes == null ? null : attributes.get(TENANT_ID_ATTRIBUTE);
+        if (existing != null && !existing.isEmpty() && !existing.get(0).isBlank()) {
+            return; // already has a tenant — never overwrite
+        }
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
+        attributes.put(TENANT_ID_ATTRIBUTE, List.of(defaultTenantId));
+        representation.setAttributes(attributes);
+        resource.update(representation);
     }
 
     private UserResource userResource(UUID keycloakUserId) {

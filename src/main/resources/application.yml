@@ -59,6 +59,13 @@ app:
         realm: ${KEYCLOAK_ADMIN_REALM:skateboard-podcast}
         client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:skateboard-user-be}
         client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:dev-user-be-secret}
+  tenancy:
+    # Every user shares this tenant today (no real multi-tenancy yet — see
+    # the two seed users in realm-export.json). Backfilled onto Keycloak
+    # users who never went through a flow that sets tenant_id themselves
+    # (self-registration, Google first-login) — see
+    # KeycloakIdentityAdapter#ensureTenantAssigned.
+    default-tenant-id: ${APP_TENANCY_DEFAULT_TENANT_ID:00000000-0000-0000-0000-000000000001}
 
 railway:
   bucket:

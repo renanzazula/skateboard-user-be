@@ -1,5 +1,6 @@
 package com.skateboard.user.application.service;
 
+import com.skateboard.user.application.port.out.IdentityProviderPort;
 import com.skateboard.user.application.port.out.UserRepositoryPort;
 import com.skateboard.user.domain.model.AccountStatus;
 import com.skateboard.user.domain.model.UserProfile;
@@ -22,12 +23,15 @@ class GetCurrentUserServiceTest {
     @Mock
     private UserRepositoryPort userRepositoryPort;
 
+    @Mock
+    private IdentityProviderPort identityProviderPort;
+
     private GetCurrentUserService service;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        service = new GetCurrentUserService(userRepositoryPort);
+        service = new GetCurrentUserService(userRepositoryPort, identityProviderPort);
     }
 
     @Test
@@ -40,6 +44,7 @@ class GetCurrentUserServiceTest {
 
         assertThat(result).isSameAs(existing);
         verify(userRepositoryPort, never()).save(any());
+        verify(identityProviderPort, never()).ensureTenantAssigned(any());
     }
 
     @Test
@@ -54,5 +59,6 @@ class GetCurrentUserServiceTest {
         assertThat(result.getUsername()).isEqualTo("rzazula");
         assertThat(result.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         verify(userRepositoryPort).save(any());
+        verify(identityProviderPort).ensureTenantAssigned(keycloakUserId);
     }
 }
