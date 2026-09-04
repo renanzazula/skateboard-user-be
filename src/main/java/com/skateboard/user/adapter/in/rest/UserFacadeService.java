@@ -27,8 +27,6 @@ public class UserFacadeService {
 
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final UpdateCurrentUserUseCase updateCurrentUserUseCase;
-    private final GetNotificationPreferencesUseCase getNotificationPreferencesUseCase;
-    private final UpdateNotificationPreferencesUseCase updateNotificationPreferencesUseCase;
     private final UploadProfilePictureUseCase uploadProfilePictureUseCase;
     private final ChangeUsernameUseCase changeUsernameUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
@@ -39,8 +37,6 @@ public class UserFacadeService {
 
     public UserFacadeService(GetCurrentUserUseCase getCurrentUserUseCase,
                               UpdateCurrentUserUseCase updateCurrentUserUseCase,
-                              GetNotificationPreferencesUseCase getNotificationPreferencesUseCase,
-                              UpdateNotificationPreferencesUseCase updateNotificationPreferencesUseCase,
                               UploadProfilePictureUseCase uploadProfilePictureUseCase,
                               ChangeUsernameUseCase changeUsernameUseCase,
                               ChangePasswordUseCase changePasswordUseCase,
@@ -50,8 +46,6 @@ public class UserFacadeService {
                               ProfileImageStoragePort profileImageStoragePort) {
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.updateCurrentUserUseCase = updateCurrentUserUseCase;
-        this.getNotificationPreferencesUseCase = getNotificationPreferencesUseCase;
-        this.updateNotificationPreferencesUseCase = updateNotificationPreferencesUseCase;
         this.uploadProfilePictureUseCase = uploadProfilePictureUseCase;
         this.changeUsernameUseCase = changeUsernameUseCase;
         this.changePasswordUseCase = changePasswordUseCase;
@@ -69,20 +63,6 @@ public class UserFacadeService {
         UserProfile profile = updateCurrentUserUseCase.execute(
                 new UpdateCurrentUserUseCase.Input(keycloakUserId, req.getDisplayName()));
         return toUserResponse(profile);
-    }
-
-    public NotificationPreferencesResponse getNotificationPreferences(UUID keycloakUserId) {
-        return toPreferencesResponse(getNotificationPreferencesUseCase.execute(keycloakUserId));
-    }
-
-    public NotificationPreferencesResponse updateNotificationPreferences(UUID keycloakUserId,
-                                                                          UpdateNotificationPreferencesRequest req) {
-        NotificationPreferences notifications = req.getNotifications();
-        var preferences = updateNotificationPreferencesUseCase.execute(new UpdateNotificationPreferencesUseCase.Input(
-                keycloakUserId,
-                notifications != null ? notifications.getPushEnabled() : null,
-                notifications != null ? notifications.getNewPodcastEnabled() : null));
-        return toPreferencesResponse(preferences);
     }
 
     public UserResponse uploadProfilePicture(UUID keycloakUserId, MultipartFile file) {
@@ -138,15 +118,6 @@ public class UserFacadeService {
                 .status(AccountStatus.fromValue(profile.getStatus().name()))
                 .createdAt(profile.getCreatedAt().atOffset(ZoneOffset.UTC))
                 .updatedAt(profile.getUpdatedAt().atOffset(ZoneOffset.UTC));
-    }
-
-    private NotificationPreferencesResponse toPreferencesResponse(
-            com.skateboard.user.domain.model.NotificationPreferences preferences) {
-        return new NotificationPreferencesResponse()
-                .notifications(new NotificationPreferences()
-                        .pushEnabled(preferences.isPushEnabled())
-                        .newPodcastEnabled(preferences.isNewPodcastEnabled()))
-                .updatedAt(preferences.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
 
     private ProblemReportResponse toProblemReportResponse(ProblemReport report) {

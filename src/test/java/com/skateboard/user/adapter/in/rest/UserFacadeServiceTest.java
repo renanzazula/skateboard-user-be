@@ -3,7 +3,6 @@ package com.skateboard.user.adapter.in.rest;
 import com.skateboard.application.dto.*;
 import com.skateboard.user.application.port.in.*;
 import com.skateboard.user.application.port.out.ProfileImageStoragePort;
-import com.skateboard.user.domain.model.NotificationPreferences;
 import com.skateboard.user.domain.model.ProblemReport;
 import com.skateboard.user.domain.model.ProblemReportCategory;
 import com.skateboard.user.domain.model.UserProfile;
@@ -24,8 +23,6 @@ class UserFacadeServiceTest {
 
     @Mock private GetCurrentUserUseCase getCurrentUserUseCase;
     @Mock private UpdateCurrentUserUseCase updateCurrentUserUseCase;
-    @Mock private GetNotificationPreferencesUseCase getNotificationPreferencesUseCase;
-    @Mock private UpdateNotificationPreferencesUseCase updateNotificationPreferencesUseCase;
     @Mock private UploadProfilePictureUseCase uploadProfilePictureUseCase;
     @Mock private ChangeUsernameUseCase changeUsernameUseCase;
     @Mock private ChangePasswordUseCase changePasswordUseCase;
@@ -40,7 +37,6 @@ class UserFacadeServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         facade = new UserFacadeService(getCurrentUserUseCase, updateCurrentUserUseCase,
-                getNotificationPreferencesUseCase, updateNotificationPreferencesUseCase,
                 uploadProfilePictureUseCase, changeUsernameUseCase, changePasswordUseCase,
                 deactivateCurrentUserUseCase, deleteCurrentUserUseCase, reportProblemUseCase,
                 profileImageStoragePort);
@@ -59,25 +55,6 @@ class UserFacadeServiceTest {
         assertThat(response.getUsername()).isEqualTo("rzazula");
         assertThat(response.getDisplayName()).isEqualTo("Rzazula");
         assertThat(response.getStatus()).isEqualTo(com.skateboard.application.dto.AccountStatus.ACTIVE);
-    }
-
-    @Test
-    void updateNotificationPreferencesUnwrapsNestedNotificationsObject() {
-        UUID keycloakUserId = UUID.randomUUID();
-        NotificationPreferences preferences = NotificationPreferences.createDefault(UUID.randomUUID());
-        preferences.update(false, null);
-        when(updateNotificationPreferencesUseCase.execute(any())).thenReturn(preferences);
-
-        UpdateNotificationPreferencesRequest req = new UpdateNotificationPreferencesRequest()
-                .notifications(new com.skateboard.application.dto.NotificationPreferences().pushEnabled(false));
-
-        facade.updateNotificationPreferences(keycloakUserId, req);
-
-        ArgumentCaptor<UpdateNotificationPreferencesUseCase.Input> captor =
-                ArgumentCaptor.forClass(UpdateNotificationPreferencesUseCase.Input.class);
-        verify(updateNotificationPreferencesUseCase).execute(captor.capture());
-        assertThat(captor.getValue().pushEnabled()).isFalse();
-        assertThat(captor.getValue().newPodcastEnabled()).isNull();
     }
 
     @Test

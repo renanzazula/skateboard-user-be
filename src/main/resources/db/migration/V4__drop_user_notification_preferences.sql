@@ -1,0 +1,16 @@
+-- Notification preferences moved to skateboard-notification-be.
+--
+-- That service has owned the /api/me/preferences contract since the BFF was
+-- re-pointed at it: same route, same shape, same authorities, so the move was
+-- invisible to the app. This table has been read by nothing since, and every
+-- write has gone elsewhere — leaving it would mean a second, permanently stale
+-- copy of what users asked for.
+--
+-- The explicit opt-outs were carried over by
+-- skateboard-notification-be's V2__backfill_user_preferences.sql, which reads
+-- this table across the schema boundary. That migration is guarded and no-ops
+-- if it cannot find this table, so it MUST have run before this drop is
+-- deployed — otherwise the only record of who asked not to be notified goes
+-- with the table. Rows that were left at the default (both flags true) needed
+-- no carrying: absence means enabled on the other side.
+DROP TABLE IF EXISTS user_notification_preferences;
