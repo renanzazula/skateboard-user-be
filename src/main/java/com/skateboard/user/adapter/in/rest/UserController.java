@@ -58,20 +58,6 @@ public class UserController implements MeApi {
     }
 
     @Override
-    @PreAuthorize(SELF_READ)
-    public ResponseEntity<NotificationPreferencesResponse> getNotificationPreferences() {
-        return ResponseEntity.ok(userFacadeService.getNotificationPreferences(currentUserId()));
-    }
-
-    @Override
-    @PreAuthorize(SELF_UPDATE)
-    public ResponseEntity<NotificationPreferencesResponse> updateNotificationPreferences(
-            UpdateNotificationPreferencesRequest updateNotificationPreferencesRequest) {
-        return ResponseEntity.ok(
-                userFacadeService.updateNotificationPreferences(currentUserId(), updateNotificationPreferencesRequest));
-    }
-
-    @Override
     @PreAuthorize(SELF_UPDATE)
     public ResponseEntity<UserResponse> uploadProfilePicture(MultipartFile file) {
         return ResponseEntity.ok(userFacadeService.uploadProfilePicture(currentUserId(), file));
