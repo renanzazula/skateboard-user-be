@@ -30,12 +30,12 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     }
 
     private UserProfile toDomain(UserProfileJpaEntity e) {
-        return UserProfile.reconstitute(
+        return UserProfile.reconstitute(new UserProfile.Snapshot(
                 e.getId(), e.getKeycloakUserId(), e.getUsername(), e.getDisplayName(),
                 e.getProfilePictureUrl(), e.getProfilePictureObjectKey(),
                 AccountStatus.valueOf(e.getAccountStatus()),
                 e.getCreatedAt(), e.getUpdatedAt()
-        );
+        ));
     }
 
     private void toEntity(UserProfile profile, UserProfileJpaEntity e) {

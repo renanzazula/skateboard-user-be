@@ -33,7 +33,9 @@ public class ProblemReportJpaEntity {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    public ProblemReportJpaEntity() {}
+    public ProblemReportJpaEntity() {
+        // required by JPA
+    }
 
     public UUID getId()             { return id; }
     public UUID getUserId()         { return userId; }

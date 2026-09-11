@@ -15,33 +15,35 @@ public class UserProfile {
     private final Instant createdAt;
     private Instant updatedAt;
 
-    private UserProfile(UUID id, UUID keycloakUserId, String username, String displayName,
-                         String profilePictureUrl, String profilePictureObjectKey, AccountStatus status,
-                         Instant createdAt, Instant updatedAt) {
-        this.id = id;
-        this.keycloakUserId = keycloakUserId;
-        this.username = username;
-        this.displayName = displayName;
-        this.profilePictureUrl = profilePictureUrl;
-        this.profilePictureObjectKey = profilePictureObjectKey;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+    private UserProfile(Snapshot snapshot) {
+        this.id = snapshot.id();
+        this.keycloakUserId = snapshot.keycloakUserId();
+        this.username = snapshot.username();
+        this.displayName = snapshot.displayName();
+        this.profilePictureUrl = snapshot.profilePictureUrl();
+        this.profilePictureObjectKey = snapshot.profilePictureObjectKey();
+        this.status = snapshot.status();
+        this.createdAt = snapshot.createdAt();
+        this.updatedAt = snapshot.updatedAt();
     }
 
     /** Lazy-provisioning factory — used the first time a Keycloak-authenticated
      * caller is seen with no matching row yet (see GetCurrentUserService). */
     public static UserProfile provision(UUID keycloakUserId, String username) {
         Instant now = Instant.now();
-        return new UserProfile(UUID.randomUUID(), keycloakUserId, username, null, null, null,
-                AccountStatus.ACTIVE, now, now);
+        return new UserProfile(new Snapshot(UUID.randomUUID(), keycloakUserId, username, null, null, null,
+                AccountStatus.ACTIVE, now, now));
     }
 
-    public static UserProfile reconstitute(UUID id, UUID keycloakUserId, String username, String displayName,
-                                            String profilePictureUrl, String profilePictureObjectKey,
-                                            AccountStatus status, Instant createdAt, Instant updatedAt) {
-        return new UserProfile(id, keycloakUserId, username, displayName, profilePictureUrl,
-                profilePictureObjectKey, status, createdAt, updatedAt);
+    public static UserProfile reconstitute(Snapshot snapshot) {
+        return new UserProfile(snapshot);
+    }
+
+    /** Parameter object grouping every persisted field, so rehydrating from storage
+     * (see UserPersistenceAdapter) doesn't require a wide constructor/factory. */
+    public record Snapshot(UUID id, UUID keycloakUserId, String username, String displayName,
+                            String profilePictureUrl, String profilePictureObjectKey,
+                            AccountStatus status, Instant createdAt, Instant updatedAt) {
     }
 
     public void updateDisplayName(String displayName) {

@@ -39,7 +39,9 @@ public class UserProfileJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public UserProfileJpaEntity() {}
+    public UserProfileJpaEntity() {
+        // required by JPA
+    }
 
     public UUID getId()                            { return id; }
     public UUID getKeycloakUserId()                { return keycloakUserId; }
