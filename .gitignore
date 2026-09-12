@@ -36,3 +36,4 @@ target/
 newrelic/
 
 graphify-out*
+/.claude/settings.json
