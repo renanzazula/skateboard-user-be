@@ -1,5 +1,8 @@
 package com.skateboard.user.application.port.out;
 
+import com.skateboard.user.domain.model.IdentitySummary;
+
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -28,4 +31,14 @@ public interface IdentityProviderPort {
      * a form a regular user submits).
      */
     void ensureTenantAssigned(UUID keycloakUserId);
+
+    /**
+     * Resolves each given Keycloak user ID to its email/verification/active
+     * status, for admin-only recipient validation (e.g. Guest Application
+     * notification recipients — see AdminUserController). IDs with no
+     * matching identity are omitted from the result rather than causing an
+     * error, since a stale/removed recipient ID is an expected admin-config
+     * drift case, not a caller bug.
+     */
+    List<IdentitySummary> findIdentities(List<UUID> keycloakUserIds);
 }

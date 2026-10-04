@@ -1,6 +1,7 @@
 package com.skateboard.user.adapter.out.keycloak;
 
 import com.skateboard.user.application.port.out.IdentityProviderPort;
+import com.skateboard.user.domain.model.IdentitySummary;
 import jakarta.ws.rs.NotFoundException;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +97,25 @@ public class KeycloakIdentityAdapter implements IdentityProviderPort {
         attributes.put(TENANT_ID_ATTRIBUTE, List.of(defaultTenantId));
         representation.setAttributes(attributes);
         resource.update(representation);
+    }
+
+    @Override
+    public List<IdentitySummary> findIdentities(List<UUID> keycloakUserIds) {
+        List<IdentitySummary> summaries = new ArrayList<>(keycloakUserIds.size());
+        for (UUID keycloakUserId : keycloakUserIds) {
+            try {
+                UserRepresentation representation = userResource(keycloakUserId).toRepresentation();
+                summaries.add(new IdentitySummary(
+                        keycloakUserId,
+                        representation.getEmail(),
+                        Boolean.TRUE.equals(representation.isEmailVerified()),
+                        Boolean.TRUE.equals(representation.isEnabled())));
+            } catch (NotFoundException e) {
+                // Stale/removed recipient ID — omit rather than fail the whole lookup.
+                log.warn("No Keycloak identity found for id {} during bulk lookup", keycloakUserId);
+            }
+        }
+        return summaries;
     }
 
     private UserResource userResource(UUID keycloakUserId) {

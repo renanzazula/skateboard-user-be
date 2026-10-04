@@ -132,6 +132,7 @@
                 <version>${openapi-generator.version}</version>
                 <executions>
                     <execution>
+                        <id>generate-me-api</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
@@ -140,6 +141,30 @@
                             <generatorName>spring</generatorName>
                             <apiPackage>com.skateboard.infrastructure.web.api</apiPackage>
                             <modelPackage>com.skateboard.application.dto</modelPackage>
+                            <generateApis>true</generateApis>
+                            <generateModels>true</generateModels>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <configOptions>
+                                <interfaceOnly>true</interfaceOnly>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <openApiNullable>false</openApiNullable>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <useTags>true</useTags>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-admin-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/api/admin-openapi.yaml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <apiPackage>com.skateboard.infrastructure.web.adminapi</apiPackage>
+                            <modelPackage>com.skateboard.application.admindto</modelPackage>
                             <generateApis>true</generateApis>
                             <generateModels>true</generateModels>
                             <generateSupportingFiles>false</generateSupportingFiles>
@@ -164,6 +189,8 @@
                     <excludes>
                         <exclude>com/skateboard/infrastructure/web/api/**</exclude>
                         <exclude>com/skateboard/application/dto/**</exclude>
+                        <exclude>com/skateboard/infrastructure/web/adminapi/**</exclude>
+                        <exclude>com/skateboard/application/admindto/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -193,6 +220,8 @@
                                     <excludes>
                                         <exclude>com/skateboard/infrastructure/web/api/**</exclude>
                                         <exclude>com/skateboard/application/dto/**</exclude>
+                                        <exclude>com/skateboard/infrastructure/web/adminapi/**</exclude>
+                                        <exclude>com/skateboard/application/admindto/**</exclude>
                                     </excludes>
                                     <limits>
                                         <limit>
