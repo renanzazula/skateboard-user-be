@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -58,7 +57,7 @@ public class S3ProfileImageStorageAdapter implements ProfileImageStoragePort {
         }
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(presignedUrlExpirationMinutes))
-                .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(objectKey).build())
+                .getObjectRequest(b -> b.bucket(bucketName).key(objectKey))
                 .build();
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }

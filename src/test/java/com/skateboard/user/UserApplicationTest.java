@@ -8,7 +8,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
 
 class UserApplicationTest {
 
