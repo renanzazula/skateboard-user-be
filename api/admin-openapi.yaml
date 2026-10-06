@@ -1,0 +1,114 @@
+# Admin user-management spec — kept separate from api/openapi.yaml per that
+# file's header ("Admin user-management endpoints belong in a separate
+# spec"). Wired into the build the same way: pom.xml's
+# openapi-generator-maven-plugin generates the AdminUsersApi controller
+# interface and its DTOs from this file at build time, into
+# com.skateboard.infrastructure.web.adminapi / com.skateboard.application.admindto
+# — distinct packages from the self-service spec so generated type names
+# (e.g. ErrorResponse) never collide.
+#
+# Scope: operations callable only by platform administrators, never by the
+# self-service /me surface.
+
+openapi: "3.0.3"
+info:
+  title: Skateboard User Admin Api
+  version: "1.0.0"
+
+tags:
+  - name: admin-users
+    description: Administrator-only user lookups
+
+paths:
+
+  /admin/users/lookup:
+    get:
+      tags: [admin-users]
+      operationId: lookupUsers
+      summary: Resolve Keycloak user IDs to verified email and active status
+      description: >-
+        Used by other services/BFF flows to validate and email selected
+        recipients (e.g. Guest Application notification recipients) without
+        hardcoding addresses. IDs that don't correspond to an existing
+        identity are silently omitted from the response rather than causing
+        an error.
+      security:
+        - bearerAuth: []
+      x-required-permissions:
+        - FUNC_USER_ADMIN_LOOKUP
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Keycloak user IDs to resolve (1-100 per call).
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 100
+            items:
+              type: string
+              format: uuid
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: Resolved identities (may be fewer than requested; see description)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserLookupResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    UserLookupResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        emailVerified:
+          type: boolean
+        active:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

@@ -1,5 +1,6 @@
 package com.skateboard.user.adapter.out.keycloak;
 
+import com.skateboard.user.domain.model.IdentitySummary;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -212,5 +213,44 @@ class KeycloakIdentityAdapterTest {
 
         assertThat(representation.getAttributes()).containsEntry("tenant_id", List.of("already-assigned-tenant"));
         verify(userResource, never()).update(any());
+    }
+
+    @Test
+    void findIdentitiesResolvesEachIdToAnIdentitySummary() {
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        UserResource firstResource = org.mockito.Mockito.mock(UserResource.class);
+        UserResource secondResource = org.mockito.Mockito.mock(UserResource.class);
+        when(usersResource.get(first.toString())).thenReturn(firstResource);
+        when(usersResource.get(second.toString())).thenReturn(secondResource);
+
+        UserRepresentation firstRepresentation = new UserRepresentation();
+        firstRepresentation.setEmail("first@example.com");
+        firstRepresentation.setEmailVerified(true);
+        firstRepresentation.setEnabled(true);
+        when(firstResource.toRepresentation()).thenReturn(firstRepresentation);
+
+        UserRepresentation secondRepresentation = new UserRepresentation();
+        secondRepresentation.setEmail("second@example.com");
+        secondRepresentation.setEmailVerified(false);
+        secondRepresentation.setEnabled(false);
+        when(secondResource.toRepresentation()).thenReturn(secondRepresentation);
+
+        List<IdentitySummary> result = adapter.findIdentities(List.of(first, second));
+
+        assertThat(result).containsExactly(
+                new IdentitySummary(first, "first@example.com", true, true),
+                new IdentitySummary(second, "second@example.com", false, false));
+    }
+
+    @Test
+    void findIdentitiesOmitsIdsWithNoMatchingIdentity() {
+        UUID missing = UUID.randomUUID();
+        when(usersResource.get(missing.toString())).thenReturn(userResource);
+        when(userResource.toRepresentation()).thenThrow(new NotFoundException());
+
+        List<IdentitySummary> result = adapter.findIdentities(List.of(missing));
+
+        assertThat(result).isEmpty();
     }
 }
