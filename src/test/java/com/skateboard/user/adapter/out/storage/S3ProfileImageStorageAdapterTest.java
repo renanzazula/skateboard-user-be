@@ -26,7 +26,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -122,9 +121,9 @@ class S3ProfileImageStorageAdapterTest {
         UUID keycloakUserId = UUID.randomUUID();
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
                 .thenThrow(S3Exception.builder().message("bucket unreachable").build());
+        InputStream content = new ByteArrayInputStream(new byte[0]);
 
-        assertThatThrownBy(() -> adapter.upload(keycloakUserId, "avatar.png", "image/png",
-                new ByteArrayInputStream(new byte[0]), 0L))
+        assertThatThrownBy(() -> adapter.upload(keycloakUserId, "avatar.png", "image/png", content, 0L))
                 .isInstanceOf(S3Exception.class)
                 .hasMessageContaining("bucket unreachable");
 
